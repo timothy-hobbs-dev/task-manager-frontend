@@ -1,13 +1,17 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
 import { LogOut, CheckSquare } from 'lucide-react';
+import { useAuth } from "react-oidc-context";
 
 // Navbar Component
 const Navbar = () => {
-  const navigate = useNavigate();
-  
-  const handleLogout = () => {
-    navigate('/');
+  const auth = useAuth();
+  console.log(auth);
+  const signOutRedirect = () => {
+    const clientId = "4dnc8h177ghqf6tb9u7d33uk68";
+    const logoutUri = "http://localhost:3000/";
+    const cognitoDomain = "https://task-manager-app.auth.eu-central-1.amazoncognito.com";
+    window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(logoutUri)}`;
   };
 
   return (
@@ -18,9 +22,10 @@ const Navbar = () => {
           TaskFlow
         </Link>
         <div className="flex items-center gap-4">
-          <span className="text-white">John Doe</span>
+          <span className="text-white">{auth?.user?.profile?.email
+          }</span>
           <button
-            onClick={handleLogout}
+            onClick={() => signOutRedirect()}
             className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg transition-colors"
           >
             <LogOut className="h-4 w-4" />

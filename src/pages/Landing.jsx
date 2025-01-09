@@ -1,7 +1,9 @@
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from "react-oidc-context";
 
 
 const LandingPage = () => {
+    const auth = useAuth();
     const navigate = useNavigate();
   
     return (
@@ -15,7 +17,7 @@ const LandingPage = () => {
               Streamline your workflow and boost productivity with our intuitive task management platform.
             </p>
             <button
-              onClick={() => navigate('/dashboard')}
+             onClick={() => auth.signinRedirect()}
               className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-8 py-4 rounded-lg shadow-lg transition-all transform hover:scale-105"
             >
               Get Started
