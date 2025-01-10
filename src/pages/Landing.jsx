@@ -1,10 +1,8 @@
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from "react-oidc-context";
 
 
 const LandingPage = () => {
     const auth = useAuth();
-    const navigate = useNavigate();
   
     return (
       <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from 'react-router-dom';
+import {Link,  } from 'react-router-dom';
 import { LogOut, CheckSquare } from 'lucide-react';
 import { useAuth } from "react-oidc-context";
 
@@ -7,6 +7,7 @@ import { useAuth } from "react-oidc-context";
 const Navbar = () => {
   const auth = useAuth();
   const baseUrl = process.env.REACT_APP_BASE_URL;
+  console.log(baseUrl + "heehehheeheheheh");
 
   console.log(auth);
   const signOutRedirect = () => {
