@@ -10,27 +10,33 @@ const UsersPage = () => {
   const [error, setError] = useState(null);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-  console.log(API_BASE_URL);
+  console.log(auth);
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if(!auth.isLoading){
+      fetchUsers();
+    }
+  }, [auth]);
 
   const fetchUsers = async () => {
     try {
+      console.log("the_auth", auth);
       const response = await fetch(`${API_BASE_URL}/users`, {
         method: "GET",
-        headers: { "Access-Control-Allow-Origin": "*", 
-        "Access-Control-Allow-Credentials": true,
-        Authorization: `Bearer ${auth.user?.id_token}`
-     },
+        headers: {
+          Authorization: `Bearer ${auth.user?.id_token}`,
+          "Content-Type": "application/json",
+        },
       });
+    
       if (!response.ok) throw new Error("Failed to fetch users");
+    
       const data = await response.json();
       setUsers(data);
     } catch (error) {
       setError(error.message);
     }
+    
   };
 
   const handleInviteUser = async (e) => {
@@ -50,6 +56,7 @@ const UsersPage = () => {
       setForm({ username: "", email: "", role: "regular", password: "" });
       fetchUsers();
     } catch (error) {
+      fetchUsers();
       setError(error.message);
     }
   };
@@ -70,15 +77,15 @@ const UsersPage = () => {
             <tr className="bg-gray-100">
                 <th className="border p-2">Username</th>
                 <th className="border p-2">Email</th>
-                <th className="border p-2">Role</th>
+                <th className="border p-2">Status</th>
             </tr>
             </thead>
             <tbody>
             {users.map((user) => (
-                <tr key={user.email} className="border">
+                <tr key={user?.attribute?.email} className="border">
                 <td className="p-2">{user.username}</td>
-                <td className="p-2">{user.email}</td>
-                <td className="p-2">{user.role}</td>
+                <td className="p-2">{user?.attributes?.email}</td>
+                <td className="p-2">{user?.status}</td>
                 </tr>
             ))}
             </tbody>
