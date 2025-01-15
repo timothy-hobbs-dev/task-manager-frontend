@@ -7,7 +7,6 @@ import { useAuth } from "react-oidc-context";
 const Navbar = () => {
   const auth = useAuth();
   const baseUrl = process.env.REACT_APP_BASE_URL;
-  console.log(baseUrl + "heehehheeheheheh");
 
   console.log(auth);
   const signOutRedirect = () => {
@@ -23,6 +22,9 @@ const Navbar = () => {
         <Link to="/dashboard" className="text-white text-xl font-semibold flex items-center gap-2">
           <CheckSquare className="h-6 w-6" />
           TaskFlow
+        </Link>
+        <Link to="/users" className="text-white" hidden={auth?.user?.profile?.["cognito:groups"][0] !== 'admin'}>
+          Users
         </Link>
         <div className="flex items-center gap-4">
           <span className="text-white">{auth?.user?.profile?.email
