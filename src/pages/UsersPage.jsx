@@ -1,26 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from "react-oidc-context";
 import Navbar from "../components/Navbar";
-
+import DataTable from "../components/DataTable";
+import InviteUserModal from "../components/InviteUserModal";
+import Toast from "../components/Toast";
 
 const UsersPage = () => {
   const auth = useAuth();
   const [users, setUsers] = useState([]);
-  const [form, setForm] = useState({ username: "", email: "", role: "regular", password: "" });
-  const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
-  console.log(auth);
+
+  const columns = [
+    { key: 'username', label: 'Username' },
+    { key: 'attributes.email', label: 'Email' },
+    { key: 'status', label: 'Status' }
+  ];
 
   useEffect(() => {
-    if(!auth.isLoading){
+    if(!auth.isLoading) {
       fetchUsers();
     }
   }, [auth]);
 
   const fetchUsers = async () => {
+    setIsLoading(true);
     try {
-      console.log("the_auth", auth);
       const response = await fetch(`${API_BASE_URL}/users`, {
         method: "GET",
         headers: {
@@ -34,13 +42,13 @@ const UsersPage = () => {
       const data = await response.json();
       setUsers(data);
     } catch (error) {
-      setError(error.message);
+      showToast(error.message, 'error');
+    } finally {
+      setIsLoading(false);
     }
-    
   };
 
-  const handleInviteUser = async (e) => {
-    e.preventDefault();
+  const handleInviteUser = async (formData) => {
     try {
       const response = await fetch(`${API_BASE_URL}/users`, {
         method: "POST",
@@ -48,17 +56,20 @@ const UsersPage = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${auth.user?.id_token}`,
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(formData),
       });
 
       if (!response.ok) throw new Error("Failed to add user");
 
-      setForm({ username: "", email: "", role: "regular", password: "" });
+      showToast('User invited successfully', 'success');
       fetchUsers();
     } catch (error) {
-      fetchUsers();
-      setError(error.message);
+      showToast(error.message, 'error');
     }
+  };
+
+  const showToast = (message, type) => {
+    setToast({ show: true, message, type });
   };
 
   if (auth.user?.profile?.["cognito:groups"][0] !== 'admin') {
@@ -67,71 +78,39 @@ const UsersPage = () => {
 
   return (
     <>
-    <Navbar />
-        <div className="max-w-4xl mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-4">Users</h1>
-        {error && <p className="text-red-500">{error}</p>}
-
-        <table className="w-full border-collapse border border-gray-300">
-            <thead>
-            <tr className="bg-gray-100">
-                <th className="border p-2">Username</th>
-                <th className="border p-2">Email</th>
-                <th className="border p-2">Status</th>
-            </tr>
-            </thead>
-            <tbody>
-            {users.map((user) => (
-                <tr key={user?.attribute?.email} className="border">
-                <td className="p-2">{user.username}</td>
-                <td className="p-2">{user?.attributes?.email}</td>
-                <td className="p-2">{user?.status}</td>
-                </tr>
-            ))}
-            </tbody>
-        </table>
-
-        <h2 className="text-xl font-bold mt-6">Invite User</h2>
-        <form onSubmit={handleInviteUser} className="mt-4 space-y-2">
-            <input
-            type="text"
-            placeholder="Username"
-            value={form.username}
-            onChange={(e) => setForm({ ...form, username: e.target.value })}
-            className="border p-2 w-full"
-            required
-            />
-            <input
-            type="email"
-            placeholder="Email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            className="border p-2 w-full"
-            required
-            />
-            <select
-            value={form.role}
-            onChange={(e) => setForm({ ...form, role: e.target.value })}
-            className="border p-2 w-full"
-            >
-            <option value="regular">Regular</option>
-            <option value="admin">Admin</option>
-            </select>
-            <input
-            type="password"
-            placeholder="Temporary Password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            className="border p-2 w-full"
-            required
-            />
-            <button type="submit" className="bg-blue-600 text-white p-2 rounded w-full">
+      <Navbar />
+      <div className="max-w-7xl mx-auto p-4">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Users</h1>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+          >
             Invite User
-            </button>
-        </form>
+          </button>
         </div>
-    </>
 
+        <DataTable
+          columns={columns}
+          data={users}
+          isLoading={isLoading}
+        />
+
+        <InviteUserModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          onSubmit={handleInviteUser}
+        />
+
+        {toast.show && (
+          <Toast
+            message={toast.message}
+            type={toast.type}
+            onClose={() => setToast({ ...toast, show: false })}
+          />
+        )}
+      </div>
+    </>
   );
 };
 
