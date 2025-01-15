@@ -26,6 +26,9 @@ const Navbar = () => {
         <Link to="/users" className="text-white" hidden={auth?.user?.profile?.["cognito:groups"][0] !== 'admin'}>
           Users
         </Link>
+        <Link to="/tasks" className="text-white">
+          Tasks
+        </Link>
         <div className="flex items-center gap-4">
           <span className="text-white">{auth?.user?.profile?.email
           }</span>
