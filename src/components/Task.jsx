@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Calendar, Clock, User, Trash2, Edit2 } from 'lucide-react';
 
-const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
+const Task = ({ task, onDelete, isAdmin, users, onUpdate }) => {
   const [isEditing, setIsEditing] = useState({
     name: false,
     description: false,
@@ -43,11 +43,10 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
       [field]: value
     };
     
-    // Only update if the value has actually changed
     if (originalTask.current[field] !== value) {
       setEditedTask(updatedTask);
       onUpdate(updatedTask);
-      originalTask.current = updatedTask; // Update the reference value
+      originalTask.current = updatedTask;
     }
     
     setIsEditing({ ...isEditing, [field]: false });
@@ -58,12 +57,37 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
     return now.toISOString().slice(0, 16);
   };
 
+  // Helper function to conditionally render edit functionality
+  const renderEditableField = (field, content, editComponent) => {
+    const canEdit = field === 'comment' || isAdmin;
+    
+    if (isEditing[field] && canEdit) {
+      return editComponent;
+    }
+
+    const baseClasses = field === 'comment' 
+      ? "mt-3 text-sm text-gray-500 border-t pt-2 hover:bg-blue-50/50 px-2 py-1 rounded cursor-pointer transition-colors group"
+      : "hover:bg-blue-50/50 px-2 py-1 rounded transition-colors group";
+    
+    return (
+      <div 
+        className={`${baseClasses} ${canEdit ? 'cursor-pointer' : 'cursor-default'}`}
+        onClick={() => canEdit && setIsEditing({ ...isEditing, [field]: true })}
+      >
+        {content}
+        {canEdit && <Edit2 className="h-4 w-4 ml-2 inline-block opacity-0 group-hover:opacity-50 transition-opacity" />}
+      </div>
+    );
+  };
+
   return (
     <div className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 p-4 mb-4">
       <div className="flex justify-between items-start">
         <div className="flex-1">
           <div className="flex items-center justify-between mb-2">
-            {isEditing.name ? (
+            {renderEditableField(
+              'name',
+              <h3 className="text-lg font-semibold text-gray-900">{editedTask.name}</h3>,
               <input
                 type="text"
                 value={editedTask.name}
@@ -72,17 +96,13 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
                 className="text-lg font-semibold focus:ring-1 focus:ring-blue-200 outline-none border border-blue-100 rounded px-2 py-1 w-full transition-all"
                 autoFocus
               />
-            ) : (
-              <h3 
-                className="text-lg font-semibold text-gray-900 hover:bg-blue-50/50 px-2 py-1 rounded cursor-pointer transition-colors group"
-                onClick={() => setIsEditing({ ...isEditing, name: true })}
-              >
-                {editedTask.name}
-                <Edit2 className="h-4 w-4 ml-2 inline-block opacity-0 group-hover:opacity-50 transition-opacity" />
-              </h3>
             )}
             
-            {isEditing.status ? (
+            {renderEditableField(
+              'status',
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(editedTask.status)}`}>
+                {editedTask.status}
+              </span>,
               <select
                 value={editedTask.status}
                 onChange={(e) => handleUpdate('status', e.target.value)}
@@ -94,17 +114,12 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
                 <option value="completed">Completed</option>
                 <option value="expired">Expired</option>
               </select>
-            ) : (
-              <span 
-                className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(editedTask.status)} cursor-pointer hover:ring-2 hover:ring-offset-2 hover:ring-blue-100 transition-all`}
-                onClick={() => setIsEditing({ ...isEditing, status: true })}
-              >
-                {editedTask.status}
-              </span>
             )}
           </div>
           
-          {isEditing.description ? (
+          {renderEditableField(
+            'description',
+            <p className="text-gray-600 mb-4">{editedTask.description}</p>,
             <textarea
               value={editedTask.description}
               onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
@@ -113,20 +128,14 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
               autoFocus
               rows={3}
             />
-          ) : (
-            <p 
-              className="text-gray-600 mb-4 hover:bg-blue-50/50 px-2 py-1 rounded cursor-pointer transition-colors group"
-              onClick={() => setIsEditing({ ...isEditing, description: true })}
-            >
-              {editedTask.description}
-              <Edit2 className="h-4 w-4 ml-2 inline-block opacity-0 group-hover:opacity-50 transition-opacity" />
-            </p>
           )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center gap-2 text-gray-500">
               <User className="h-4 w-4" />
-              {isEditing.responsibility ? (
+              {renderEditableField(
+                'responsibility',
+                <span className="text-sm">{editedTask.responsibility}</span>,
                 <select
                   value={editedTask.responsibility}
                   onChange={(e) => handleUpdate('responsibility', e.target.value)}
@@ -140,21 +149,15 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
                     </option>
                   ))}
                 </select>
-              ) : (
-                <span 
-                  className="text-sm cursor-pointer hover:bg-blue-50/50 px-2 py-1 rounded transition-colors group"
-                  onClick={() => setIsEditing({ ...isEditing, responsibility: true })}
-                >
-                  {editedTask.responsibility}
-                  <Edit2 className="h-4 w-4 ml-2 inline-block opacity-0 group-hover:opacity-50 transition-opacity" />
-                </span>
               )}
             </div>
             
             <div className="flex items-center gap-2 text-gray-500">
               <Calendar className="h-4 w-4" />
               <Clock className="h-4 w-4" />
-              {isEditing.deadline ? (
+              {renderEditableField(
+                'deadline',
+                <span className="text-sm">{formatDate(editedTask.deadline)}</span>,
                 <input
                   ref={dateInputRef}
                   type="datetime-local"
@@ -165,19 +168,15 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
                   className="text-sm focus:ring-1 focus:ring-blue-200 outline-none border border-blue-100 rounded px-2 py-1 transition-all"
                   autoFocus
                 />
-              ) : (
-                <span 
-                  className="text-sm cursor-pointer hover:bg-blue-50/50 px-2 py-1 rounded transition-colors group"
-                  onClick={() => setIsEditing({ ...isEditing, deadline: true })}
-                >
-                  {formatDate(editedTask.deadline)}
-                  <Edit2 className="h-4 w-4 ml-2 inline-block opacity-0 group-hover:opacity-50 transition-opacity" />
-                </span>
               )}
             </div>
           </div>
           
-          {isEditing.comment ? (
+          {renderEditableField(
+            'comment',
+            <div className="mt-3 text-sm text-gray-500 border-t pt-2">
+              {editedTask.comment || 'Add a comment...'}
+            </div>,
             <textarea
               value={editedTask.comment || ''}
               onChange={(e) => setEditedTask({ ...editedTask, comment: e.target.value })}
@@ -186,18 +185,10 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
               autoFocus
               rows={2}
             />
-          ) : (
-            <div 
-              className="mt-3 text-sm text-gray-500 border-t pt-2 hover:bg-blue-50/50 px-2 py-1 rounded cursor-pointer transition-colors group"
-              onClick={() => setIsEditing({ ...isEditing, comment: true })}
-            >
-              {editedTask.comment || 'Add a comment...'}
-              <Edit2 className="h-4 w-4 ml-2 inline-block opacity-0 group-hover:opacity-50 transition-opacity" />
-            </div>
           )}
         </div>
         
-        {!hideDelete && (
+        {isAdmin && (
           <button
             onClick={() => onDelete(task.TaskId)}
             className="ml-4 text-gray-400 hover:text-red-500 transition-colors duration-200"

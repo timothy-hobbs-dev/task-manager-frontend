@@ -149,13 +149,16 @@ const TaskList = () => {
         </div>
 
         {/* Add Task Button styled like a task card */}
-        <div 
+        {auth?.user?.profile?.["cognito:groups"][0] === 'admin' ?(
+
+          <div 
           onClick={() => setIsModalOpen(true)}
           className="bg-white rounded-lg border-2 border-dashed border-gray-300 p-4 mb-4 cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors duration-200 flex items-center justify-center"
         >
           <Plus className="h-6 w-6 text-gray-400 mr-2" />
           <span className="text-gray-600 font-medium">Add New Task</span>
         </div>
+        ):null}
 
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
@@ -170,7 +173,7 @@ const TaskList = () => {
              onDelete={handleDeleteTask}
              onUpdate={handleUpdateTask}
              users={users}
-             hideDelete={auth?.user?.profile?.["cognito:groups"][0] !== 'admin'}
+             isAdmin={auth?.user?.profile?.["cognito:groups"][0] === 'admin'}
            />
             ))}
           </div>
