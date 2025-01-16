@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Calendar, Clock, User, Trash2, Edit2 } from 'lucide-react';
 
 const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {

@@ -46,9 +46,9 @@ const Dashboard = () => {
     const pending = tasks.filter(task => task.status === 'pending').length;
     
     return [
-      { name: 'Completed', value: completed, color: '#10B981' },
-      { name: 'Expired', value: expired, color: '#EF4444' },
-      { name: 'Open', value: open, color: '#3B82F6' }
+      { name: 'Completed', value: "completed", color: '#10B981' },
+      { name: 'Expired', value: "expired", color: '#EF4444' },
+      { name: 'Open', value: "open", color: '#3B82F6' }
     ];
   };
 
