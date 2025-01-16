@@ -90,6 +90,7 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
                 className="focus:ring-1 focus:ring-blue-200 outline-none border border-blue-100 rounded px-2 py-1 transition-all"
                 autoFocus
               >
+                <option value="pending">Open</option>
                 <option value="pending">Pending</option>
                 <option value="completed">Completed</option>
                 <option value="expired">Expired</option>

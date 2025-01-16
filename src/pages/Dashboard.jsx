@@ -1,50 +1,180 @@
+import React, { useEffect, useState } from 'react';
+import { useAuth } from "react-oidc-context";
 import Navbar from "../components/Navbar";
+import { CheckCircle, AlertCircle, Clock, Users } from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from 'recharts';
 
 const Dashboard = () => {
-    const tasks = [
-      { id: 1, title: "Complete project proposal", status: "In Progress", due: "2025-01-15" },
-      { id: 2, title: "Review team presentations", status: "Pending", due: "2025-01-20" },
-      { id: 3, title: "Update documentation", status: "Completed", due: "2025-01-12" },
+  const auth = useAuth();
+  const [tasks, setTasks] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+  useEffect(() => {
+    if (!auth.isLoading) {
+      fetchTasks();
+    }
+  }, [auth]);
+
+  const fetchTasks = async () => {
+    setIsLoading(true);
+    try {
+      const endpoint = auth?.user?.profile?.["cognito:groups"][0] === 'admin' 
+        ? `${API_BASE_URL}/tasks/all` 
+        : `${API_BASE_URL}/tasks`;
+
+      const response = await fetch(endpoint, {
+        headers: {
+          Authorization: `Bearer ${auth.user?.id_token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch tasks");
+      const data = await response.json();
+      setTasks(data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getTaskStats = () => {
+    const completed = tasks.filter(task => task.status === 'completed').length;
+    const expired = tasks.filter(task => task.status === 'expired').length;
+    const pending = tasks.filter(task => task.status === 'pending').length;
+    
+    return [
+      { name: 'Completed', value: completed, color: '#10B981' },
+      { name: 'Expired', value: expired, color: '#EF4444' },
+      { name: 'Open', value: open, color: '#3B82F6' }
     ];
-  
+  };
+
+  const getAssigneeStats = () => {
+    const assignees = {};
+    tasks.forEach(task => {
+      assignees[task.responsibility] = (assignees[task.responsibility] || 0) + 1;
+    });
+    return assignees;
+  };
+
+  const getUpcomingDeadlines = () => {
+    return tasks
+      .filter(task => task.status !== 'completed')
+      .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+      .slice(0, 5);
+  };
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50">
+      <>
         <Navbar />
-        <div className="max-w-7xl mx-auto px-4 py-8">
-          <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900">Your Tasks</h2>
-            <p className="text-gray-600">Welcome back! Here's what's on your plate today.</p>
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Navbar />
+      <div className="max-w-7xl mx-auto p-6">
+        <h1 className="text-2xl font-bold mb-6">Dashboard Overview</h1>
+        
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500">Total Tasks</p>
+                <p className="text-2xl font-bold">{tasks.length}</p>
+              </div>
+              <Users className="h-8 w-8 text-blue-500" />
+            </div>
           </div>
           
-          <div className="grid gap-6">
-            {tasks.map((task) => (
-              <div
-                key={task.id}
-                className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{task.title}</h3>
-                    <p className="text-gray-500 mt-1">Due: {task.due}</p>
-                  </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-sm ${
-                      task.status === "Completed"
-                        ? "bg-green-100 text-green-800"
-                        : task.status === "In Progress"
-                        ? "bg-blue-100 text-blue-800"
-                        : "bg-yellow-100 text-yellow-800"
-                    }`}
-                  >
-                    {task.status}
-                  </span>
-                </div>
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500">Completed</p>
+                <p className="text-2xl font-bold">{tasks.filter(t => t.status === 'completed').length}</p>
               </div>
-            ))}
+              <CheckCircle className="h-8 w-8 text-green-500" />
+            </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500">Open</p>
+                <p className="text-2xl font-bold">{tasks.filter(t => t.status === 'open').length}</p>
+              </div>
+              <Clock className="h-8 w-8 text-blue-500" />
+            </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-lg shadow">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-500">Expired</p>
+                <p className="text-2xl font-bold">{tasks.filter(t => t.status === 'expired').length}</p>
+              </div>
+              <AlertCircle className="h-8 w-8 text-red-500" />
+            </div>
+          </div>
+        </div>
+
+        {/* Charts and Lists */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Status Distribution Chart */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4">Task Status Distribution</h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={getTaskStats()}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label
+                  >
+                    {getTaskStats().map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Upcoming Deadlines */}
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-4">Upcoming Deadlines</h2>
+            <div className="space-y-4">
+              {getUpcomingDeadlines().map(task => (
+                <div key={task.TaskId} className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium">{task.name}</p>
+                    <p className="text-sm text-gray-500">{task.responsibility}</p>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    {new Date(task.deadline).toLocaleDateString()}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    );
-  };
+    </>
+  );
+};
 
 export default Dashboard;
