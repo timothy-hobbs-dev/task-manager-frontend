@@ -43,7 +43,7 @@ const Dashboard = () => {
   const getTaskStats = () => {
     const completed = tasks.filter(task => task.status === 'completed').length;
     const expired = tasks.filter(task => task.status === 'expired').length;
-    const open = tasks.filter(task => task.status === 'pending').length;
+    const open = tasks.filter(task => task.status === 'open').length;
     
     return [
       { name: 'Completed', value: completed, color: '#10B981' },
