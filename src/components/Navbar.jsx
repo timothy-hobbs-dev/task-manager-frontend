@@ -1,5 +1,5 @@
 import React from 'react';
-import {Link,  } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { LogOut, CheckSquare } from 'lucide-react';
 import { useAuth } from "react-oidc-context";
 
@@ -19,21 +19,27 @@ const Navbar = () => {
   return (
     <nav className="bg-blue-600 p-4 shadow-md">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <Link to="/dashboard" className="text-white text-xl font-semibold flex items-center gap-2">
-          <CheckSquare className="h-6 w-6" />
-          TaskFlow
-        </Link>
-        <Link to="/users" className="text-white" hidden={auth?.user?.profile?.["cognito:groups"][0] !== 'admin'}>
-          Users
-        </Link>
-        <Link to="/tasks" className="text-white">
-          Tasks
-        </Link>
-        <div className="flex items-center gap-4">
-          <span className="text-white">{auth?.user?.profile?.email
-          }</span>
+        {/* Company Name on the Left */}
+        <div>
+          <Link to="/dashboard" className="text-white text-xl font-semibold flex items-center gap-2">
+            <CheckSquare className="h-6 w-6" />
+            TaskOverFlow
+          </Link>
+        </div>
+
+        {/* Links and User Info on the Right */}
+        <div className="flex items-center gap-6">
+          {auth?.user?.profile?.["cognito:groups"]?.[0] === 'admin' && (
+            <Link to="/users" className="text-white">
+              Users
+            </Link>
+          )}
+          <Link to="/tasks" className="text-white">
+            Tasks
+          </Link>
+          <span className="text-white">{auth?.user?.profile?.email}</span>
           <button
-            onClick={() => signOutRedirect()}
+            onClick={signOutRedirect}
             className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white px-4 py-2 rounded-lg transition-colors"
           >
             <LogOut className="h-4 w-4" />
