@@ -127,7 +127,7 @@ const TaskList = () => {
         body: JSON.stringify(updatedTask),
       });
 
-      if (!response.ok) throw new Error("Failed to update task");
+      if (!response.ok) throw new Error(response?.error ?? "Failed to update task");
 
       showToast('Task updated successfully', 'success');
       fetchTasks();
