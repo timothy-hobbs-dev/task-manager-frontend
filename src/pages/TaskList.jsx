@@ -116,6 +116,26 @@ const TaskList = () => {
     }
   };
 
+  const handleUpdateTask = async (updatedTask) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tasks`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${auth.user?.id_token}`,
+        },
+        body: JSON.stringify(updatedTask),
+      });
+
+      if (!response.ok) throw new Error("Failed to update task");
+
+      showToast('Task updated successfully', 'success');
+      fetchTasks();
+    } catch (error) {
+      showToast(error.message, 'error');
+    }
+  };
+
   const showToast = (message, type) => {
     setToast({ show: true, message, type });
   };
@@ -144,11 +164,14 @@ const TaskList = () => {
         ) : (
           <div className="space-y-4">
             {tasks.map((task) => (
-              <Task
-                key={task.TaskId}
-                task={task}
-                onDelete={handleDeleteTask}
-              />
+             <Task
+             key={task.TaskId}
+             task={task}
+             onDelete={handleDeleteTask}
+             onUpdate={handleUpdateTask}
+             users={users}
+             hideDelete={auth?.user?.profile?.["cognito:groups"][0] !== 'admin'}
+           />
             ))}
           </div>
         )}
