@@ -12,6 +12,7 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
   });
   
   const [editedTask, setEditedTask] = useState(task);
+  const originalTask = useRef(task);
   const dateInputRef = useRef(null);
 
   const getStatusColor = (status) => {
@@ -41,14 +42,20 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
       ...editedTask,
       [field]: value
     };
-    setEditedTask(updatedTask);
-    onUpdate(updatedTask);
+    
+    // Only update if the value has actually changed
+    if (originalTask.current[field] !== value) {
+      setEditedTask(updatedTask);
+      onUpdate(updatedTask);
+      originalTask.current = updatedTask; // Update the reference value
+    }
+    
     setIsEditing({ ...isEditing, [field]: false });
   };
 
   const getMinDateTime = () => {
     const now = new Date();
-    return now.toISOString().slice(0, 16); // Format: YYYY-MM-DDThh:mm
+    return now.toISOString().slice(0, 16);
   };
 
   return (
@@ -62,15 +69,16 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
                 value={editedTask.name}
                 onChange={(e) => setEditedTask({ ...editedTask, name: e.target.value })}
                 onBlur={() => handleUpdate('name', editedTask.name)}
-                className="text-lg font-semibold border rounded px-2 py-1 w-full"
+                className="text-lg font-semibold focus:ring-1 focus:ring-blue-200 outline-none border border-blue-100 rounded px-2 py-1 w-full transition-all"
                 autoFocus
               />
             ) : (
               <h3 
-                className="text-lg font-semibold text-gray-900 hover:bg-gray-50 px-2 py-1 rounded cursor-pointer"
+                className="text-lg font-semibold text-gray-900 hover:bg-blue-50/50 px-2 py-1 rounded cursor-pointer transition-colors group"
                 onClick={() => setIsEditing({ ...isEditing, name: true })}
               >
                 {editedTask.name}
+                <Edit2 className="h-4 w-4 ml-2 inline-block opacity-0 group-hover:opacity-50 transition-opacity" />
               </h3>
             )}
             
@@ -79,7 +87,7 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
                 value={editedTask.status}
                 onChange={(e) => handleUpdate('status', e.target.value)}
                 onBlur={() => setIsEditing({ ...isEditing, status: false })}
-                className="border rounded px-2 py-1"
+                className="focus:ring-1 focus:ring-blue-200 outline-none border border-blue-100 rounded px-2 py-1 transition-all"
                 autoFocus
               >
                 <option value="pending">Pending</option>
@@ -88,7 +96,7 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
               </select>
             ) : (
               <span 
-                className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(editedTask.status)} cursor-pointer`}
+                className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(editedTask.status)} cursor-pointer hover:ring-2 hover:ring-offset-2 hover:ring-blue-100 transition-all`}
                 onClick={() => setIsEditing({ ...isEditing, status: true })}
               >
                 {editedTask.status}
@@ -101,15 +109,17 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
               value={editedTask.description}
               onChange={(e) => setEditedTask({ ...editedTask, description: e.target.value })}
               onBlur={() => handleUpdate('description', editedTask.description)}
-              className="w-full border rounded px-2 py-1 mb-4"
+              className="w-full focus:ring-1 focus:ring-blue-200 outline-none border border-blue-100 rounded px-2 py-1 mb-4 transition-all resize-none"
               autoFocus
+              rows={3}
             />
           ) : (
             <p 
-              className="text-gray-600 mb-4 hover:bg-gray-50 px-2 py-1 rounded cursor-pointer"
+              className="text-gray-600 mb-4 hover:bg-blue-50/50 px-2 py-1 rounded cursor-pointer transition-colors group"
               onClick={() => setIsEditing({ ...isEditing, description: true })}
             >
               {editedTask.description}
+              <Edit2 className="h-4 w-4 ml-2 inline-block opacity-0 group-hover:opacity-50 transition-opacity" />
             </p>
           )}
           
@@ -121,7 +131,7 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
                   value={editedTask.responsibility}
                   onChange={(e) => handleUpdate('responsibility', e.target.value)}
                   onBlur={() => setIsEditing({ ...isEditing, responsibility: false })}
-                  className="text-sm border rounded px-2 py-1"
+                  className="text-sm focus:ring-1 focus:ring-blue-200 outline-none border border-blue-100 rounded px-2 py-1 transition-all"
                   autoFocus
                 >
                   {users.map((user) => (
@@ -132,10 +142,11 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
                 </select>
               ) : (
                 <span 
-                  className="text-sm cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
+                  className="text-sm cursor-pointer hover:bg-blue-50/50 px-2 py-1 rounded transition-colors group"
                   onClick={() => setIsEditing({ ...isEditing, responsibility: true })}
                 >
                   {editedTask.responsibility}
+                  <Edit2 className="h-4 w-4 ml-2 inline-block opacity-0 group-hover:opacity-50 transition-opacity" />
                 </span>
               )}
             </div>
@@ -151,15 +162,16 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
                   value={new Date(editedTask.deadline).toISOString().slice(0, 16)}
                   onChange={(e) => handleUpdate('deadline', new Date(e.target.value).toISOString())}
                   onBlur={() => setIsEditing({ ...isEditing, deadline: false })}
-                  className="text-sm border rounded px-2 py-1"
+                  className="text-sm focus:ring-1 focus:ring-blue-200 outline-none border border-blue-100 rounded px-2 py-1 transition-all"
                   autoFocus
                 />
               ) : (
                 <span 
-                  className="text-sm cursor-pointer hover:bg-gray-50 px-2 py-1 rounded"
+                  className="text-sm cursor-pointer hover:bg-blue-50/50 px-2 py-1 rounded transition-colors group"
                   onClick={() => setIsEditing({ ...isEditing, deadline: true })}
                 >
                   {formatDate(editedTask.deadline)}
+                  <Edit2 className="h-4 w-4 ml-2 inline-block opacity-0 group-hover:opacity-50 transition-opacity" />
                 </span>
               )}
             </div>
@@ -170,15 +182,17 @@ const Task = ({ task, onDelete, hideDelete, users, onUpdate }) => {
               value={editedTask.comment || ''}
               onChange={(e) => setEditedTask({ ...editedTask, comment: e.target.value })}
               onBlur={() => handleUpdate('comment', editedTask.comment)}
-              className="w-full mt-3 border rounded px-2 py-1 text-sm"
+              className="w-full mt-3 focus:ring-1 focus:ring-blue-200 outline-none border border-blue-100 rounded px-2 py-1 text-sm transition-all resize-none"
               autoFocus
+              rows={2}
             />
           ) : (
             <div 
-              className="mt-3 text-sm text-gray-500 border-t pt-2 hover:bg-gray-50 px-2 py-1 rounded cursor-pointer"
+              className="mt-3 text-sm text-gray-500 border-t pt-2 hover:bg-blue-50/50 px-2 py-1 rounded cursor-pointer transition-colors group"
               onClick={() => setIsEditing({ ...isEditing, comment: true })}
             >
               {editedTask.comment || 'Add a comment...'}
+              <Edit2 className="h-4 w-4 ml-2 inline-block opacity-0 group-hover:opacity-50 transition-opacity" />
             </div>
           )}
         </div>
