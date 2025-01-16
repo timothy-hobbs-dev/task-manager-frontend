@@ -37,7 +37,7 @@ const UsersPage = () => {
         },
       });
     
-      if (!response.ok) throw new Error("Failed to fetch users");
+      if (!response.ok) throw new Error(response?.error ?? "Failed to update task");
     
       const data = await response.json();
       setUsers(data);

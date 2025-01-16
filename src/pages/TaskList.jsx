@@ -46,7 +46,7 @@ const TaskList = () => {
         }
      
     
-      if (!response.ok) throw new Error("Failed to fetch tasks");
+        if (!response.ok) throw new Error(response?.error ?? "Failed to update task");
     
       const data = await response.json();
       setTasks(data);
@@ -67,7 +67,7 @@ const TaskList = () => {
         },
       });
     
-      if (!response.ok) throw new Error("Failed to fetch users");
+      if (!response.ok) throw new Error(response?.error ?? "Failed to update task");
     
       const data = await response.json();
       setUsers(data);
@@ -87,7 +87,7 @@ const TaskList = () => {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error("Failed to add task");
+      if (!response.ok) throw new Error(response?.error ?? "Failed to update task");
 
       showToast('Task added successfully', 'success');
       fetchTasks();
@@ -107,7 +107,7 @@ const TaskList = () => {
         body: JSON.stringify({ TaskId: taskId }),
       });
 
-      if (!response.ok) throw new Error("Failed to delete task");
+      if (!response.ok) throw new Error(response?.error ?? "Failed to update task");
 
       showToast('Task deleted successfully', 'success');
       fetchTasks();
