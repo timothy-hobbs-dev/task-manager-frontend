@@ -19,7 +19,9 @@ const TaskList = () => {
   useEffect(() => {
     if (!auth.isLoading) {
       fetchTasks();
-      fetchUsers();
+      if(auth?.user?.profile?.["cognito:groups"][0] === 'admin'){
+        fetchUsers();
+      }
     }
   }, [auth]);
 
