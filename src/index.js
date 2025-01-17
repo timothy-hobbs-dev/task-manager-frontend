@@ -9,6 +9,7 @@ import { AuthProvider } from "react-oidc-context";
 const baseUrl = process.env.REACT_APP_BASE_URL;
 const origin = window.location.origin;
 
+console.log(`${origin}/dashboard`)
 
 const cognitoAuthConfig = {
   authority: "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_DaEPtiEmo",
