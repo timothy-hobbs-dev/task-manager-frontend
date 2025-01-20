@@ -28,7 +28,7 @@ const TaskList = () => {
         fetchUsers();
       }
     }
-  }, [auth]);
+  }, [auth,isAdmin]);
 
   const fetchTasks = async () => {
     setIsLoading(true);
