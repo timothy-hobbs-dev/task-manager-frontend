@@ -21,8 +21,6 @@ const TaskList = () => {
     if (!auth.isLoading) {
       const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
       setIsAdmin(userIsAdmin);
-      console.log(userIsAdmin,'from profile');
-      console.log(isAdmin);
       fetchTasks();
       if (userIsAdmin) {
         fetchUsers();
