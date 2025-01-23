@@ -11,8 +11,8 @@ const origin = window.location.origin;
 console.log(`${origin}/dashboard`)
 
 const cognitoAuthConfig = {
-  authority: "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_DaEPtiEmo",
-  client_id: "4dnc8h177ghqf6tb9u7d33uk68",
+  authority: "https://cognito-idp.eu-central-1.amazonaws.com/eu-central-1_IzC1zCuKg",
+  client_id: "4uagl7rknlj7tg55ofpg3agidf",
   redirect_uri: `${origin}/dashboard`,
   response_type: "code",
   scope: "aws.cognito.signin.user.admin email openid phone profile",
