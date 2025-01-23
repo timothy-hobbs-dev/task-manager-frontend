@@ -12,6 +12,6 @@ phases:
   post_build:
     commands:
       - echo "Build completed on `date`"
-      - aws s3 cp --recursive ./build/ s3://task-manager-frontend-msc1/
+      - aws s3 cp --recursive ./build/ s3://task-manager-frontend-hosting/
       - echo "Deployment completed on `date`"
-      - aws cloudfront create-invalidation --distribution-id E3LXVB66E9XVD9 --path /\*
+      - aws cloudfront create-invalidation --distribution-id EPDC7E5O350QS --path /\*

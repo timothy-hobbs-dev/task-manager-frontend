@@ -6,7 +6,6 @@ import App from './App';
 import { AuthProvider } from "react-oidc-context";
 
 //use base url from .env file
-const baseUrl = process.env.REACT_APP_BASE_URL;
 const origin = window.location.origin;
 
 console.log(`${origin}/dashboard`)
