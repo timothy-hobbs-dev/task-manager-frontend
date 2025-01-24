@@ -9,9 +9,9 @@ const Navbar = () => {
 
   console.log(auth);
   const signOutRedirect = () => {
-    const clientId = "4dnc8h177ghqf6tb9u7d33uk68";
+    const clientId = "4uagl7rknlj7tg55ofpg3agidf";
     const logoutUri = window.location.origin;
-    const cognitoDomain = "https://task-manager-app.auth.eu-central-1.amazoncognito.com";
+    const cognitoDomain = "https://task-manager-frontend-domain.auth.eu-central-1.amazoncognito.com";
     window.location.href = `${cognitoDomain}/logout?client_id=${clientId}&logout_uri=${encodeURIComponent(logoutUri)}`;
   };
 
