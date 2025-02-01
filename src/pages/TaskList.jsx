@@ -23,17 +23,17 @@ const TaskList = () => {
       setIsAdmin(userIsAdmin);
       console.log(userIsAdmin,'from profile');
       console.log(isAdmin);
-      fetchTasks();
+      fetchTasks(userIsAdmin);
       if (userIsAdmin) {
         fetchUsers();
       }
     }
   }, [auth,isAdmin]);
 
-  const fetchTasks = async () => {
+  const fetchTasks = async (userIsAdmin) => {
     setIsLoading(true);
     try {
-      const endpoint = isAdmin ? `${API_BASE_URL}/tasks/all` : `${API_BASE_URL}/tasks`;
+      const endpoint = userIsAdmin ? `${API_BASE_URL}/tasks/all` : `${API_BASE_URL}/tasks`;
       const response = await fetch(endpoint, {
         method: "GET",
         headers: {
