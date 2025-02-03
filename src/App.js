@@ -12,6 +12,7 @@ const ProtectedRoute = ({ children }) => {
 
   if (!auth.isAuthenticated) {
     // Redirect to landing page if not authenticated
+    console.log('redirect');
     return <Navigate to="/" replace />;
   }
 
