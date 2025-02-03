@@ -86,7 +86,9 @@ const TaskList = () => {
       if (!response.ok) throw new Error(response?.error ?? "Failed to add task");
 
       showToast('Task added successfully', 'success');
-      fetchTasks();
+      const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
+
+      fetchTasks(userIsAdmin);
     } catch (error) {
       showToast(error.message, 'error');
     }
@@ -106,7 +108,9 @@ const TaskList = () => {
       if (!response.ok) throw new Error(response?.error ?? "Failed to delete task");
 
       showToast('Task deleted successfully', 'success');
-      fetchTasks();
+      const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
+
+      fetchTasks(userIsAdmin);
     } catch (error) {
       showToast(error.message, 'error');
     }
@@ -126,7 +130,9 @@ const TaskList = () => {
       if (!response.ok) throw new Error(response?.error ?? "Failed to update task");
 
       showToast('Task updated successfully', 'success');
-      fetchTasks();
+      const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
+
+      fetchTasks(userIsAdmin);
     } catch (error) {
       showToast(error.message, 'error');
     }
