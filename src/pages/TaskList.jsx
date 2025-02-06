@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useAuth } from "react-oidc-context";
 import { Plus, ClipboardList, SlidersHorizontal, ChevronDown } from 'lucide-react';
+import debounce from 'lodash/debounce';
 import Navbar from "../components/Navbar";
 import Task from "../components/Task";
 import AddTaskModal from "../components/AddTaskModal";
@@ -15,7 +16,6 @@ const TaskList = () => {
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isAdmin, setIsAdmin] = useState(false);
   
-  // New state for filtering, sorting, and pagination
   const [filters, setFilters] = useState({
     status: '',
     responsibility: '',
@@ -26,6 +26,14 @@ const TaskList = () => {
   const [nextToken, setNextToken] = useState(null);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
+
+  // Debounced fetch function
+  const debouncedFetch = useCallback(
+    debounce((userIsAdmin, loadMore = false) => {
+      fetchTasks(userIsAdmin, loadMore);
+    }, 300),
+    [] // Empty dependency array since we don't want to recreate the debounced function
+  );
 
   useEffect(() => {
     if (!auth.isLoading) {
@@ -38,18 +46,23 @@ const TaskList = () => {
     }
   }, [auth, isAdmin]);
 
+  // Add effect to trigger fetch when filters or sort changes
+  useEffect(() => {
+    if (!auth.isLoading) {
+      const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
+      debouncedFetch(userIsAdmin);
+    }
+  }, [filters, sortConfig]);
+
   const buildQueryString = (userIsAdmin) => {
     const params = new URLSearchParams();
     
-    // Add filters if they have values
     Object.entries(filters).forEach(([key, value]) => {
       if (value) params.append(key, value);
     });
     
-    // Add sort
     params.append('sort', sortConfig);
     
-    // Add pagination token if exists
     if (nextToken) {
       params.append('next_token', nextToken);
     }
@@ -89,6 +102,17 @@ const TaskList = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleFilterChange = (key, value) => {
+    const newFilters = { ...filters, [key]: value };
+    setFilters(newFilters);
+    setNextToken(null); // Reset pagination when filters change
+  };
+
+  const handleSortChange = (value) => {
+    setSortConfig(value);
+    setNextToken(null); // Reset pagination when sort changes
   };
   const fetchUsers = async () => {
     try {
@@ -195,20 +219,6 @@ const TaskList = () => {
       )}
     </div>
   );
-  const handleFilterChange = (key, value) => {
-    const newFilters = { ...filters, [key]: value };
-    setFilters(newFilters);
-    setNextToken(null); // Reset pagination when filters change
-    const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
-    fetchTasks(userIsAdmin);
-  };
-
-  const handleSortChange = (value) => {
-    setSortConfig(value);
-    setNextToken(null); // Reset pagination when sort changes
-    const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
-    fetchTasks(userIsAdmin);
-  };
 
   const loadMore = () => {
     const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
