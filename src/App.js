@@ -10,11 +10,11 @@ import TaskList from './pages/TaskList';
 const ProtectedRoute = ({ children }) => {
   const auth = useAuth();
 
-  if (!auth.isAuthenticated) {
-    // Redirect to landing page if not authenticated
-    console.log('redirect');
-    return <Navigate to="/" replace />;
-  }
+  // if (!auth.isAuthenticated) {
+  //   // Redirect to landing page if not authenticated
+  //   console.log('redirect');
+  //   return <Navigate to="/" replace />;
+  // }
 
   return children;
 };
