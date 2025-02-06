@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from "react-oidc-context";
-import { Plus, ClipboardList } from 'lucide-react';
+import { Plus, ClipboardList, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import Navbar from "../components/Navbar";
 import Task from "../components/Task";
 import AddTaskModal from "../components/AddTaskModal";
@@ -14,6 +14,16 @@ const TaskList = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [toast, setToast] = useState({ show: false, message: '', type: 'success' });
   const [isAdmin, setIsAdmin] = useState(false);
+  
+  // New state for filtering, sorting, and pagination
+  const [filters, setFilters] = useState({
+    status: '',
+    responsibility: '',
+    name: '',
+    description: ''
+  });
+  const [sortConfig, setSortConfig] = useState('deadline:asc');
+  const [nextToken, setNextToken] = useState(null);
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL;
 
@@ -21,19 +31,40 @@ const TaskList = () => {
     if (!auth.isLoading) {
       const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
       setIsAdmin(userIsAdmin);
-      console.log(userIsAdmin,'from profile');
-      console.log(isAdmin);
       fetchTasks(userIsAdmin);
       if (userIsAdmin) {
         fetchUsers();
       }
     }
-  }, [auth,isAdmin]);
+  }, [auth, isAdmin]);
 
-  const fetchTasks = async (userIsAdmin) => {
+  const buildQueryString = (userIsAdmin) => {
+    const params = new URLSearchParams();
+    
+    // Add filters if they have values
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params.append(key, value);
+    });
+    
+    // Add sort
+    params.append('sort', sortConfig);
+    
+    // Add pagination token if exists
+    if (nextToken) {
+      params.append('next_token', nextToken);
+    }
+    
+    return params.toString();
+  };
+
+  const fetchTasks = async (userIsAdmin, loadMore = false) => {
     setIsLoading(true);
     try {
-      const endpoint = userIsAdmin ? `${API_BASE_URL}/tasks/all` : `${API_BASE_URL}/tasks`;
+      const queryString = buildQueryString(userIsAdmin);
+      const endpoint = userIsAdmin 
+        ? `${API_BASE_URL}/tasks/all?${queryString}`
+        : `${API_BASE_URL}/tasks?${queryString}`;
+
       const response = await fetch(endpoint, {
         method: "GET",
         headers: {
@@ -45,14 +76,20 @@ const TaskList = () => {
       if (!response.ok) throw new Error(response?.error ?? "Failed to fetch tasks");
     
       const data = await response.json();
-      setTasks(data);
+      
+      if (loadMore) {
+        setTasks(prev => [...prev, ...data.items]);
+      } else {
+        setTasks(data.items);
+      }
+      
+      setNextToken(data.next_token);
     } catch (error) {
       showToast(error.message, 'error');
     } finally {
       setIsLoading(false);
     }
   };
-
   const fetchUsers = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/users`, {
@@ -158,6 +195,25 @@ const TaskList = () => {
       )}
     </div>
   );
+  const handleFilterChange = (key, value) => {
+    const newFilters = { ...filters, [key]: value };
+    setFilters(newFilters);
+    setNextToken(null); // Reset pagination when filters change
+    const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
+    fetchTasks(userIsAdmin);
+  };
+
+  const handleSortChange = (value) => {
+    setSortConfig(value);
+    setNextToken(null); // Reset pagination when sort changes
+    const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
+    fetchTasks(userIsAdmin);
+  };
+
+  const loadMore = () => {
+    const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
+    fetchTasks(userIsAdmin, true);
+  };
 
   return (
     <>
@@ -167,6 +223,51 @@ const TaskList = () => {
           <div>
             <h1 className="text-2xl font-bold">Tasks</h1>
             <p className="text-gray-600 mt-1">Total tasks: {tasks.length}</p>
+          </div>
+        </div>
+
+        {/* Filter and Sort Controls */}
+        <div className="mb-6 space-y-4">
+          <div className="flex gap-4 flex-wrap">
+            <select
+              className="border rounded-md px-3 py-2"
+              value={filters.status}
+              onChange={(e) => handleFilterChange('status', e.target.value)}
+            >
+              <option value="">All Status</option>
+              <option value="completed">Completed</option>
+              <option value="expired">Expired</option>
+              <option value="open">Open</option>
+            </select>
+
+            <input
+              type="text"
+              placeholder="Search by name"
+              className="border rounded-md px-3 py-2"
+              value={filters.name}
+              onChange={(e) => handleFilterChange('name', e.target.value)}
+            />
+
+            <input
+              type="text"
+              placeholder="Search by responsibility"
+              className="border rounded-md px-3 py-2"
+              value={filters.responsibility}
+              onChange={(e) => handleFilterChange('responsibility', e.target.value)}
+            />
+
+            <select
+              className="border rounded-md px-3 py-2"
+              value={sortConfig}
+              onChange={(e) => handleSortChange(e.target.value)}
+            >
+              <option value="deadline:asc">Deadline (Ascending)</option>
+              <option value="deadline:desc">Deadline (Descending)</option>
+              <option value="name:asc">Name (A-Z)</option>
+              <option value="name:desc">Name (Z-A)</option>
+              <option value="status:asc">Status (A-Z)</option>
+              <option value="status:desc">Status (Z-A)</option>
+            </select>
           </div>
         </div>
 
@@ -189,16 +290,36 @@ const TaskList = () => {
             {tasks.length === 0 ? (
               <EmptyState />
             ) : (
-              tasks.map((task) => (
-                <Task
-                  key={task.TaskId}
-                  task={task}
-                  onDelete={handleDeleteTask}
-                  onUpdate={handleUpdateTask}
-                  users={users}
-                  isAdmin={isAdmin}
-                />
-              ))
+              <>
+                {tasks.map((task) => (
+                  <Task
+                    key={task.TaskId}
+                    task={task}
+                    onDelete={handleDeleteTask}
+                    onUpdate={handleUpdateTask}
+                    users={users}
+                    isAdmin={isAdmin}
+                  />
+                ))}
+                
+                {/* Load More Button */}
+                {nextToken && (
+                  <button
+                    onClick={loadMore}
+                    disabled={isLoading}
+                    className="w-full mt-4 px-4 py-2 bg-white border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                  >
+                    {isLoading ? (
+                      'Loading...'
+                    ) : (
+                      <>
+                        Load More
+                        <ChevronDown className="ml-2 h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                )}
+              </>
             )}
           </div>
         )}
@@ -220,6 +341,8 @@ const TaskList = () => {
       </div>
     </>
   );
+
+
 };
 
 export default TaskList;

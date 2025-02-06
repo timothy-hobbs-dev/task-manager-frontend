@@ -1,6 +1,6 @@
 import './App.css';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './hooks/useAuth'; // Adjust import path as needed
+import { useAuth } from 'react-oidc-context'
 import LandingPage from './pages/Landing';
 import Dashboard from './pages/Dashboard';
 import UsersPage from "./pages/UsersPage";
