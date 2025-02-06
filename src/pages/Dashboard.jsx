@@ -32,7 +32,7 @@ const Dashboard = () => {
 
       if (!response.ok) throw new Error("Failed to fetch tasks");
       const data = await response.json();
-      setTasks(data);
+      setTasks(data?.items);
     } catch (error) {
       console.error(error);
     } finally {
@@ -52,13 +52,6 @@ const Dashboard = () => {
     ];
   };
 
-  const getAssigneeStats = () => {
-    const assignees = {};
-    tasks.forEach(task => {
-      assignees[task.responsibility] = (assignees[task.responsibility] || 0) + 1;
-    });
-    return assignees;
-  };
 
   const getUpcomingDeadlines = () => {
     return tasks
