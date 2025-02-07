@@ -147,7 +147,7 @@ const TaskList = () => {
         body: JSON.stringify({ TaskId: taskId }),
       });
 
-      if (!response.ok) throw new Error(response?.error ?? "Failed to delete task");
+      if (!response.ok) throw new Error(response.json()?.error ?? "Failed to delete task");
 
       showToast('Task deleted successfully', 'success');
       const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
@@ -169,7 +169,7 @@ const TaskList = () => {
         body: JSON.stringify(updatedTask),
       });
 
-      if (!response.ok) throw new Error(response?.error ?? "Failed to update task");
+      if (!response.ok) throw new Error(response.json()?.error ?? "Failed to update task");
 
       showToast('Task updated successfully', 'success');
       const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
