@@ -126,7 +126,7 @@ const TaskList = () => {
         body: JSON.stringify(formData),
       });
 
-      if (!response.ok) throw new Error("Failed to add task");
+      if (!response.ok) throw new Error(response?.error ?? "Failed to add task");
 
       showToast("Task added successfully", "success");
       fetchTasks(isAdmin, false);
