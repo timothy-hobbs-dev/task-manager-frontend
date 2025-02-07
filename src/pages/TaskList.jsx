@@ -65,9 +65,7 @@ const TaskList = () => {
     setIsLoading(true);
     try {
       const queryString = buildQueryString();
-      const endpoint = userIsAdmin
-        ? `${API_BASE_URL}/tasks/all?${queryString}`
-        : `${API_BASE_URL}/tasks?${queryString}`;
+      const endpoint =  `${API_BASE_URL}/tasks/all?${queryString}`
 
       const response = await fetch(endpoint, {
         method: "GET",
