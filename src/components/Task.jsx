@@ -15,6 +15,18 @@ const Task = ({ task, onDelete, isAdmin, users, onUpdate }) => {
   const originalTask = useRef(task);
   const dateInputRef = useRef(null);
 
+  const handleUpdate = async (field, value) => {
+    const updatedTask = { ...editedTask, [field]: value };
+
+    if (originalTask.current[field] !== value) {
+      setEditedTask(updatedTask);
+      onUpdate(updatedTask);
+      originalTask.current = updatedTask;
+    }
+
+    setIsEditing({ ...isEditing, [field]: false });
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'expired':
@@ -37,22 +49,6 @@ const Task = ({ task, onDelete, isAdmin, users, onUpdate }) => {
     });
   };
 
-  const handleUpdate = async (field, value) => {
-    const updatedTask = { ...editedTask, [field]: value };
-
-    if (originalTask.current[field] !== value) {
-      setEditedTask(updatedTask);
-      onUpdate(updatedTask);
-      originalTask.current = updatedTask;
-    }
-
-    setIsEditing({ ...isEditing, [field]: false });
-  };
-
-  const markAsCompleted = () => {
-    handleUpdate('status', 'completed');
-  };
-
   const getMinDateTime = () => {
     const now = new Date();
     return now.toISOString().slice(0, 16);
@@ -63,6 +59,7 @@ const Task = ({ task, onDelete, isAdmin, users, onUpdate }) => {
       <div className="flex justify-between items-start">
         <div className="flex-1">
           <div className="flex items-center justify-between mb-2">
+            {/* Task Name */}
             <h3 
               className="text-lg font-semibold text-gray-900 cursor-pointer hover:bg-blue-50/50 px-2 py-1 rounded transition-colors"
               onClick={() => isAdmin && setIsEditing({ ...isEditing, name: true })}
@@ -94,7 +91,7 @@ const Task = ({ task, onDelete, isAdmin, users, onUpdate }) => {
               </select>
             ) : editedTask.status !== 'completed' ? (
               <button
-                onClick={markAsCompleted}
+                onClick={() => handleUpdate('status', 'completed')}
                 className="flex items-center gap-1 text-blue-600 bg-blue-100 hover:bg-blue-200 px-3 py-1 rounded-full text-sm font-medium transition-all"
               >
                 <CheckCircle className="h-4 w-4" />
@@ -107,6 +104,7 @@ const Task = ({ task, onDelete, isAdmin, users, onUpdate }) => {
             )}
           </div>
 
+          {/* Description */}
           <p 
             className="text-gray-600 cursor-pointer hover:bg-blue-50/50 px-2 py-1 rounded transition-colors"
             onClick={() => isAdmin && setIsEditing({ ...isEditing, description: true })}
@@ -126,19 +124,43 @@ const Task = ({ task, onDelete, isAdmin, users, onUpdate }) => {
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* User Reassignment */}
             <div className="flex items-center gap-2 text-gray-500">
               <User className="h-4 w-4" />
-              <span className="text-sm">{editedTask.responsibility}</span>
+              {isAdmin ? (
+                <select
+                  value={editedTask.responsibility}
+                  onChange={(e) => handleUpdate('responsibility', e.target.value)}
+                  className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-blue-200 focus:ring-1"
+                >
+                  {users.map((user) => (
+                    <option key={user} value={user}>{user}</option>
+                  ))}
+                </select>
+              ) : (
+                <span className="text-sm">{editedTask.responsibility}</span>
+              )}
             </div>
 
+            {/* Deadline Selection */}
             <div className="flex items-center gap-2 text-gray-500">
               <Calendar className="h-4 w-4" />
               <Clock className="h-4 w-4" />
-              <span className="text-sm">{formatDate(editedTask.deadline)}</span>
+              {isAdmin ? (
+                <input
+                  type="datetime-local"
+                  value={editedTask.deadline}
+                  min={getMinDateTime()}
+                  onChange={(e) => handleUpdate('deadline', e.target.value)}
+                  className="text-sm border border-gray-300 rounded px-2 py-1 focus:ring-blue-200 focus:ring-1"
+                />
+              ) : (
+                <span className="text-sm">{formatDate(editedTask.deadline)}</span>
+              )}
             </div>
           </div>
 
-          {/* Comment Section (Visible to Both Admin and User) */}
+          {/* Comment Section */}
           <div className="mt-4 p-2 border-t border-gray-300">
             <div className="flex items-center gap-2 text-gray-700">
               <MessageCircle className="h-4 w-4 text-gray-500" />
@@ -163,15 +185,6 @@ const Task = ({ task, onDelete, isAdmin, users, onUpdate }) => {
             )}
           </div>
         </div>
-
-        {isAdmin && (
-          <button
-            onClick={() => onDelete(task.TaskId)}
-            className="ml-4 text-gray-400 hover:text-red-500 transition-colors duration-200"
-          >
-            <Trash2 className="h-5 w-5" />
-          </button>
-        )}
       </div>
     </div>
   );
