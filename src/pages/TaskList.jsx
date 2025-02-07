@@ -135,6 +135,52 @@ const TaskList = () => {
     }
   };
 
+
+  const handleDeleteTask = async (taskId) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tasks`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${auth.user?.id_token}`,
+        },
+        body: JSON.stringify({ TaskId: taskId }),
+      });
+
+      if (!response.ok) throw new Error(response?.error ?? "Failed to delete task");
+
+      showToast('Task deleted successfully', 'success');
+      const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
+
+      fetchTasks(userIsAdmin);
+    } catch (error) {
+      showToast(error.message, 'error');
+    }
+  };
+
+  const handleUpdateTask = async (updatedTask) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/tasks`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${auth.user?.id_token}`,
+        },
+        body: JSON.stringify(updatedTask),
+      });
+
+      if (!response.ok) throw new Error(response?.error ?? "Failed to update task");
+
+      showToast('Task updated successfully', 'success');
+      const userIsAdmin = auth?.user?.profile?.["cognito:groups"][0] === 'admin';
+
+      fetchTasks(userIsAdmin);
+    } catch (error) {
+      showToast(error.message, 'error');
+    }
+  };
+
+
   const showToast = (message, type) => {
     setToast({ show: true, message, type });
   };
@@ -188,7 +234,12 @@ const TaskList = () => {
         ) : (
           <>
             {tasks.map((task) => (
-              <Task key={task.TaskId} task={task} users={users} isAdmin={isAdmin} />
+              <Task key={task.TaskId}
+              task={task}
+              onDelete={handleDeleteTask}
+              onUpdate={handleUpdateTask}
+              users={users}
+              isAdmin={isAdmin} />
             ))}
 
             {nextToken && (
