@@ -19,9 +19,7 @@ const Dashboard = () => {
   const fetchTasks = async () => {
     setIsLoading(true);
     try {
-      const endpoint = auth?.user?.profile?.["cognito:groups"][0] === 'admin' 
-        ? `${API_BASE_URL}/tasks/all` 
-        : `${API_BASE_URL}/tasks`;
+      const endpoint =  `${API_BASE_URL}/tasks/all`
 
       const response = await fetch(endpoint, {
         headers: {
